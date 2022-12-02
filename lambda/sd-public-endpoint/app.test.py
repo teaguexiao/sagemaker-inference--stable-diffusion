@@ -11,8 +11,8 @@ import uuid
 import json
 import time
 
-ENDPOINT_NAME = os.environ["ENDPOINT_NAME"]
-ENDPOINT_NAME_ASYNC = os.environ["ENDPOINT_NAME_ASYNC"]
+ENDPOINT_NAME = "huggingface-pytorch-inference"
+ENDPOINT_NAME_ASYNC = "huggingface-pytorch-inference-async"
 BODY_TEMPLATE = '<html><head></head><body><img src="data:image/png;base64,IMAGE"/><br><h3>PROMPT</h3></body></html>'
 
 config = Config(read_timeout=30, retries={"max_attempts": 0})
@@ -26,9 +26,9 @@ sentence_generator = DocumentGenerator()
 boto_session = boto3.session.Session()
 sm_runtime = boto_session.client("sagemaker-runtime")
 s3=boto3.client('s3')
+#s3_resource=boto3.resource('s3')
 
 app = Chalice(app_name="sd-public-endpoint")
-
 
 def make_response(res):
     return Response(
@@ -39,7 +39,7 @@ def make_response(res):
         headers={"Content-Type": "text/html", "prompt": res["prompt"]},
     )
 
-def async_response(res, prompt):
+def async_response(res,prompt):
     output_location = res["OutputLocation"]
     print("output_location:", output_location)
 
@@ -87,7 +87,8 @@ def async_response(res, prompt):
     print(json.loads(s3_clientdata)["data"])
     
     print("all good")
-
+    print("prompt:",prompt)
+    
     return Response(
         body=BODY_TEMPLATE.replace("IMAGE", img_base64).replace(
             "PROMPT", prompt
@@ -96,10 +97,8 @@ def async_response(res, prompt):
         headers={"Content-Type": "text/html", "prompt": "to_be_filled"},
     )
 
-@app.route("/")
 def index():
     return "Online Stable Diffusion"
-
 
 def inference(prompt=""):
     data = {"prompt": prompt} if prompt else {}
@@ -140,31 +139,28 @@ def async_inference(prompt=""):
     print("Inference completed")
     return res
 
-@app.route("/inference/{prompt}")
 def inference_with_prompt(prompt):
     prompt = unquote(prompt)
     res = inference(prompt)
     return make_response(res)
 
-@app.route("/inference")
 def inference_without_prompt():
     res = inference(sentence_generator.sentence())
     return make_response(res)
 
-@app.route("/inference/default")
 def inference_without_prompt():
     res = inference("a photo of an astronaut riding a horse on mars")
     return make_response(res)
 
 #Added for Async inference by Teague@20111116
-@app.route("/async_inference/{prompt}")
+
 def async_inference_with_prompt(prompt):
     prompt = unquote(prompt)
     res = async_inference(prompt)
     return async_response(res,prompt)
 
-@app.route("/async_inference")
 def async_inference_without_prompt():
-    prompt = sentence_generator.sentence()
-    res = async_inference(prompt)
-    return async_response(res,prompt)
+    res = async_inference(sentence_generator.sentence())
+    return async_response(res)
+
+async_inference_with_prompt("basketball in hand for a girl")

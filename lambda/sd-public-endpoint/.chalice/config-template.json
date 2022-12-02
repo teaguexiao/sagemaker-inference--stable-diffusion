@@ -4,7 +4,8 @@
   "lambda_timeout": 30,
   "lambda_memory_size": 1024,
   "environment_variables": {
-    "ENDPOINT_NAME": "huggingface-pytorch-inference"
+    "ENDPOINT_NAME": "huggingface-pytorch-inference",
+    "ENDPOINT_NAME_ASYNC": "huggingface-pytorch-inference-async"
   },
   "stages": {
     "dev": {

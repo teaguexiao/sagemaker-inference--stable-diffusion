@@ -10,6 +10,7 @@ with open(CURR_PATH / ".." / "terraform" / "bucket-name.txt", "r") as f:
     bucket_name = f.read()
 
 RESOURCE_NAME = "huggingface-pytorch-inference"
+RESOURCE_NAME_ASYNC = "huggingface-pytorch-inference-async"
 
 MODEL_PARAMS = {
     "model_data": f"s3://{bucket_name}/sdv1-4_model.tar.gz",
